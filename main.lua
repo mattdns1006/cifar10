@@ -13,24 +13,26 @@ dofile("display.lua")
 opt = lapp[[
 	-l --load    	   (default true)
 	-r --run           (default false)
-	--learningRate     (default 1)
+	--learningRate     (default 0.2)
+	--batchSize 	   (default 40)
 ]]
 
 nClasses = 10
 feed = data.init()
 criterion = nn.CrossEntropyCriterion():cuda()
 
-if opt.l == true then print("Loading model"); model = torch.load("nn.model") else print("New model"); model = makeModel() end
+--if opt.l == true then print("Loading model"); model = torch.load("nn.model") else print("New model"); model = makeModel() end
+model = makeModel()
 parameters, gradParameters = model:getParameters()
 trainCm, testCm = optim.ConfusionMatrix(10), optim.ConfusionMatrix(10)
-batchSize = 200
-lr = 1
+batchSize = opt.batchSize 
+lr = 0.2 
 
 function trainEpoch()
 
 	model:training()
 	epoch = epoch or 1
-	lr = (lr - 0.02) 
+	lr = (lr - 0.001) 
 	optimState = {learningRate = lr, weightDecay = 0.0005, momentum = 0.9, learningRateDecay = 1e-7}
 
 	print("Training epoch number ", epoch, optimState)
