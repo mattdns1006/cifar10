@@ -12,6 +12,7 @@ end
 function makeModel()
 	local model = nn.Sequential()
 	nFeats = 32
+	dropout = {0.2,0.3,0.3,0.4}
 	for i = 1, 4 do
 
 		nOut = nFeats + 24
@@ -27,7 +28,7 @@ function makeModel()
 		model:add(nn.SpatialConvolution(nOut,nOut,3,3,2,2,1,1))
 		model:add(nn.SpatialBatchNormalization(nOut))
 		model:add(nn.ReLU())
-		model:add(nn.Dropout(0.1*i))
+		model:add(nn.Dropout(dropout[i]))
 
 		nFeats = nOut
 	end

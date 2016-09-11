@@ -14,9 +14,10 @@ opt = lapp[[
 	-l --load    	   (default true)
 	-r --run           (default false)
 	--learningRate     (default 0.2)
-	--batchSize 	   (default 40)
+	--batchSize 	   (default 20)
 ]]
 
+displayProb = 0.1
 nClasses = 10
 feed = data.init()
 criterion = nn.CrossEntropyCriterion():cuda()
@@ -26,14 +27,15 @@ model = makeModel()
 parameters, gradParameters = model:getParameters()
 trainCm, testCm = optim.ConfusionMatrix(10), optim.ConfusionMatrix(10)
 batchSize = opt.batchSize 
-lr = 0.1
+lr = 0.05
 nEpochs = 15 
 
 function trainEpoch()
 
 	model:training()
 	epoch = epoch or 1
-	lr = (lr - 0.01)
+	local temp = lr
+
 	optimState = {learningRate = lr, weightDecay = 0.0005, momentum = 0.9, learningRateDecay = 1e-7}
 
 	print("Training epoch number ", epoch, optimState)
@@ -65,7 +67,7 @@ function trainEpoch()
 				model:backward(X,dLdO)
 				return loss, gradParameters
 			end
-			display("train",X,Y,YPred)
+			if torch.uniform() < displayProb then display("train",X,Y,YPred) end
 			xlua.progress(k,#indices)
 			optim.sgd(feval,parameters,optimState)
 
@@ -76,7 +78,6 @@ function trainEpoch()
 		if feed.currentFile == 5 then
 			break
 		end
-		print(trainCm)
 
 	end
 	meanLoss = torch.Tensor(losses):mean()
@@ -90,6 +91,10 @@ function trainEpoch()
 	torch.save("nn.model",model)
 	trainCm:zero()
 	trTimer:reset()
+
+	lr = (lr*0.95)
+	print(string.format("Dropping learning rate from %f to %f",temp,lr))
+
 	return meanLoss, acc/100
 end
 
@@ -106,7 +111,7 @@ function testEpoch()
 		X = X:cuda()
 		Y = Y:cuda()
 		YPred = model:forward(X) 
-		display("test",X,Y,YPred)
+		if torch.uniform() < displayProb then display("test",X,Y,YPred) end
 		loss = criterion:forward(YPred,Y)
 		testCm:batchAdd(YPred,Y)
 		table.insert(losses,loss)
