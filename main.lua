@@ -26,13 +26,14 @@ model = makeModel()
 parameters, gradParameters = model:getParameters()
 trainCm, testCm = optim.ConfusionMatrix(10), optim.ConfusionMatrix(10)
 batchSize = opt.batchSize 
-lr = 0.2 
+lr = 0.1
+nEpochs = 15 
 
 function trainEpoch()
 
 	model:training()
 	epoch = epoch or 1
-	lr = (lr - 0.001) 
+	lr = (lr - 0.01)
 	optimState = {learningRate = lr, weightDecay = 0.0005, momentum = 0.9, learningRateDecay = 1e-7}
 
 	print("Training epoch number ", epoch, optimState)
@@ -120,11 +121,10 @@ end
 
 function run() 
 	print(model)
-	nEpochs = 10
 	x = torch.range(1,nEpochs)
 	trLosses,trAccs = torch.zeros(nEpochs), torch.zeros(nEpochs)
 	teLosses,teAccs = torch.zeros(nEpochs), torch.zeros(nEpochs)
-	for i=1,10 do
+	for i=1,nEpochs do
 		trLosses[i], trAccs[i] = trainEpoch()
 		teLosses[i], teAccs[i] = testEpoch()
 		gnuplot.plot({'Train losses', x,trLosses,'-'},{'Train acc', x,trAccs,'-'},{'Test losses', x,teLosses,'-'},{'Test acc', x,teAccs,'-'})

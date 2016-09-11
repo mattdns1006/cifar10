@@ -11,7 +11,7 @@ end
 
 function makeModel()
 	local model = nn.Sequential()
-	nFeats = 24 
+	nFeats = 32
 	for i = 1, 4 do
 
 		nOut = nFeats + 24
