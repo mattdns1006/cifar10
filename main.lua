@@ -27,8 +27,18 @@ model = makeModel()
 parameters, gradParameters = model:getParameters()
 trainCm, testCm = optim.ConfusionMatrix(10), optim.ConfusionMatrix(10)
 batchSize = opt.batchSize 
-lr = 0.05
+lr = 0.15
 nEpochs = 15 
+
+learningRates = {}
+for i = 1, nEpochs do 
+	lr = lr*0.95
+	learningRates[i] = lr
+	if i % 5 ==0  then 
+		lr = lr*0.6
+	end
+end
+
 
 function trainEpoch()
 
@@ -36,7 +46,7 @@ function trainEpoch()
 	epoch = epoch or 1
 	local temp = lr
 
-	optimState = {learningRate = lr, weightDecay = 0.0005, momentum = 0.9, learningRateDecay = 1e-7}
+	optimState = {learningRate = learningRates[epoch], weightDecay = 0.0005, momentum = 0.9, learningRateDecay = 1e-7}
 
 	print("Training epoch number ", epoch, optimState)
 
@@ -92,8 +102,10 @@ function trainEpoch()
 	trainCm:zero()
 	trTimer:reset()
 
+	--[[
 	lr = (lr*0.95)
 	print(string.format("Dropping learning rate from %f to %f",temp,lr))
+	]]--
 
 	return meanLoss, acc/100
 end
@@ -132,7 +144,9 @@ function run()
 	for i=1,nEpochs do
 		trLosses[i], trAccs[i] = trainEpoch()
 		teLosses[i], teAccs[i] = testEpoch()
-		gnuplot.plot({'Train losses', x,trLosses,'-'},{'Train acc', x,trAccs,'-'},{'Test losses', x,teLosses,'-'},{'Test acc', x,teAccs,'-'})
+		gnuplot.plot({'Train losses', x,trLosses,'-'},{'Train acc', x,trAccs,'-'},
+			     {'Test losses', x,teLosses,'-'},{'Test acc', x,teAccs,'-'},
+			     {'Learning Rate',x,torch.Tensor(learningRates),'-'})
 		gnuplot.axis{1,i,0,2}
 	end
 
